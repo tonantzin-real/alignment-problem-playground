@@ -60,7 +60,7 @@ footer{color:var(--muted);font-size:.85rem;margin-top:40px}
 <p class="sub">An interactive reflection on <em>The Alignment Problem</em> by Brian Christian (2020). The book has three parts: <strong>Prophecy</strong>, <strong>Agency</strong> and <strong>Normativity</strong>. Each demo below makes one idea from one part something you can poke at.</p>
 
 <div class="reflect" id="intro-reflection">
-  <p class="todo">[YOUR WORDS] Why I picked this book, and the one sentence I would use to explain "the alignment problem" to a friend.</p>
+  <p class="todo">I picked this book because AI is everywhere now, and I think it’s really important for us to understand what we can do so these tools are aligned with what we ask them and with what we actually want them to do. Something I’ve noticed in other classes, like ethics and causal inference, is that these models will always give us an answer. But we need to make sure the questions we are asking are the ones we really want answered. If I had to explain it briefly, the alignment problem is basically the gap between what we tell an AI to do and what we actually want it to do.</p>
 </div>
 
 <!-- ============ PART 1: PROPHECY ============ -->
@@ -93,7 +93,7 @@ footer{color:var(--muted);font-size:.85rem;margin-top:40px}
   <h3>Calibration check (outcome rate by score bin)</h3>
   <canvas id="calib" width="900" height="260"></canvas>
   <div class="reflect">
-    <p class="todo">[YOUR WORDS] What this changed in how I think about "fair" models. In my Project 1 credit model, which fairness definition would I pick, and who pays for that choice?</p>
+    <p class="todo">For me, it all comes down to how we define fairness. As the book shows with COMPAS, there are different definitions, and we can choose between them depending on what we care about. But we can’t have all of them at the same time. If two groups have different base rates, using the same threshold for everyone gives each group different error rates, and fixing that means the same score gets treated differently depending on the group. In my Project 1 credit model, I don’t think there is one right answer. If I had to pick, I would go with giving the same chance of approval to people who would actually pay back, because that’s the whole point of the model, no matter their age or if they are married. In the end, the ones who pay for any of these choices are the customers, especially the ones from groups that already get rejected more. In my project, those were people over 30 and married people, who got fewer recourse plans. </p>
   </div>
 </section>
 
@@ -121,7 +121,7 @@ footer{color:var(--muted);font-size:.85rem;margin-top:40px}
     </div>
   </div>
   <div class="reflect">
-    <p class="todo">[YOUR WORDS] A time I have seen "the metric becomes the target" in real life (school, work, apps). How is an LLM chatbot giving credit advice (my Project 2) a reward-specification problem?</p>
+    <p class="todo"> I will run into this in my second project, where I check the advice LLM chatbots give to people who were rejected for credit. The tricky part is choosing the right proxy, because in the end the proxy is what we measure, and sometimes it isn’t a good match for what we actually want.</p>
   </div>
 </section>
 
@@ -155,7 +155,7 @@ footer{color:var(--muted);font-size:.85rem;margin-top:40px}
     </div>
   </div>
   <div class="reflect">
-    <p class="todo">[YOUR WORDS] What surprised me when the learner misread the expert. Where does this show up when we fine-tune LLMs on human preferences?</p>
+    <p class="todo"> What surprised me is that the learner could only tell the expert didn’t like mud when there was a mud path the expert could have taken and didn’t. If the expert never had that choice, the model just can’t know. This also shows up with chatbots, because they are trained with people rating their answers, so they learn what people reward and not always what people really meant. For my second project this matters a lot, because a chatbot can give credit advice that sounds good and gets good ratings, but doesn’t actually help someone get approved.</p>
   </div>
 </section>
 
@@ -163,7 +163,7 @@ footer{color:var(--muted);font-size:.85rem;margin-top:40px}
   <span class="tag">Closing</span>
   <h2>What I am taking with me</h2>
   <div class="reflect">
-    <p class="todo">[YOUR WORDS] What came up in our three book club discussions. Where I agree or disagree with Christian. How the book connects to explainability: is explaining a model enough if the objective itself is wrong?</p>
+    <p class="todo"> What I’m taking with me is that alignment doesn’t come for free. We have to define very carefully what we want, and even then the model might find a way around it. I also think explaining a model is not enough if the goal of the model is wrong, because SHAP can explain really well a model that is optimizing the wrong thing. For me, explainability and alignment have to go together.</p>
   </div>
 </section>
 
