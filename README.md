@@ -3,7 +3,6 @@
 An interactive Book Club reflection on **_The Alignment Problem: Machine Learning and Human Values_** by Brian Christian (2020), for AIPI 590 (Explainable AI), Duke.
 
 **Live demo:** https://tonantzin-real.github.io/alignment-problem-playground/
-**Video walkthrough:** VIDEO-LINK
 
 ## What this is
 
