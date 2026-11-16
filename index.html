@@ -1,0 +1,421 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Alignment Failures Playground</title>
+<style>
+:root{
+  --bg:#fbfaf7; --panel:#ffffff; --ink:#1d1d1f; --muted:#5f6368; --line:#e2dfd8;
+  --a:#2f6fdb; --b:#d9822b; --good:#2e8b57; --bad:#c0392b; --accent:#6b4fbb;
+  --grass:#cfe8c4; --road:#e6e1d6; --mud:#b08d6a; --wall:#3a3a3a;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#16171a; --panel:#1f2125; --ink:#ececec; --muted:#a3a7ad; --line:#33363c;
+    --a:#6ea0ff; --b:#f0a35c; --good:#5cc48a; --bad:#ff6b5c; --accent:#a88bff;
+    --grass:#35553a; --road:#4a4740; --mud:#7a5c3e; --wall:#0c0c0c;
+  }
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.55 system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
+main{max-width:980px;margin:0 auto;padding:24px 16px 80px}
+h1{font-size:2rem;margin:.2em 0}
+h2{font-size:1.4rem;margin:0 0 .3em}
+h3{font-size:1.05rem;margin:1em 0 .3em}
+p{margin:.5em 0}
+.sub{color:var(--muted)}
+section.card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:20px;margin:22px 0}
+.tag{display:inline-block;font-size:.75rem;letter-spacing:.06em;text-transform:uppercase;color:var(--accent);font-weight:600}
+.row{display:flex;flex-wrap:wrap;gap:18px;align-items:flex-start}
+.col{flex:1 1 300px;min-width:0}
+label{display:block;font-size:.9rem;color:var(--muted);margin-top:8px}
+input[type=range]{width:100%}
+button{font:inherit;font-size:.9rem;border:1px solid var(--line);background:var(--bg);color:var(--ink);border-radius:8px;padding:6px 12px;cursor:pointer;margin:4px 6px 4px 0}
+button.primary{background:var(--accent);color:#fff;border-color:var(--accent)}
+table{border-collapse:collapse;width:100%;font-size:.92rem}
+th,td{padding:6px 8px;border-bottom:1px solid var(--line);text-align:right}
+th:first-child,td:first-child{text-align:left}
+.ga{color:var(--a);font-weight:600}.gb{color:var(--b);font-weight:600}
+.verdict{margin-top:10px;padding:10px 12px;border-radius:10px;background:var(--bg);border:1px solid var(--line);font-size:.93rem}
+canvas{max-width:100%;height:auto;display:block}
+.grid{display:grid;gap:2px;user-select:none;max-width:100%}
+.cell{aspect-ratio:1;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:.8rem;font-weight:700;position:relative}
+.legend span{display:inline-flex;align-items:center;gap:6px;margin-right:14px;font-size:.85rem;color:var(--muted)}
+.sw{width:14px;height:14px;border-radius:3px;display:inline-block}
+.reflect{border-left:4px solid var(--accent);padding:8px 14px;margin-top:14px;background:var(--bg);border-radius:0 10px 10px 0}
+.reflect .todo{color:var(--muted);font-style:italic}
+.bars .bar{display:flex;align-items:center;gap:8px;margin:4px 0;font-size:.9rem}
+.bars .track{flex:1;height:14px;background:var(--bg);border:1px solid var(--line);border-radius:7px;position:relative;overflow:hidden}
+.bars .fill{position:absolute;top:0;bottom:0}
+.bars .zero{position:absolute;left:50%;top:0;bottom:0;width:1px;background:var(--muted)}
+code{background:var(--bg);padding:1px 5px;border-radius:4px;font-size:.88em}
+footer{color:var(--muted);font-size:.85rem;margin-top:40px}
+</style>
+</head>
+<body>
+<main>
+<span class="tag">Book Club Reflection · AIPI 590 Explainable AI</span>
+<h1>Three alignment failures you can play with</h1>
+<p class="sub">An interactive reflection on <em>The Alignment Problem</em> by Brian Christian (2020). The book has three parts: <strong>Prophecy</strong>, <strong>Agency</strong> and <strong>Normativity</strong>. Each demo below makes one idea from one part something you can poke at.</p>
+
+<div class="reflect" id="intro-reflection">
+  <p class="todo">[YOUR WORDS] Why I picked this book, and the one sentence I would use to explain "the alignment problem" to a friend.</p>
+</div>
+
+<!-- ============ PART 1: PROPHECY ============ -->
+<section class="card" id="prophecy">
+  <span class="tag">Part I · Prophecy</span>
+  <h2>1. You can't have every kind of fairness at once</h2>
+  <p>The book retells the COMPAS debate. ProPublica showed that Black defendants who did <em>not</em> reoffend were flagged high-risk far more often than white defendants. Northpointe replied that the score was <em>calibrated</em>: a given score meant the same reoffense rate in both groups. Both were right. Kleinberg, Chouldechova and others proved that when groups have different base rates, a calibrated score <strong>cannot</strong> also give equal false positive and false negative rates.</p>
+  <p>Below, both groups get a perfectly calibrated risk score (by construction, a person with score <code>s</code> has an <code>s</code> chance of the outcome). Group <span class="ga">A</span> has a higher base rate than group <span class="gb">B</span>. Move the thresholds and try to make the error rates equal <em>without</em> treating the same score differently.</p>
+  <div class="row">
+    <div class="col">
+      <label>Base rate of group <span class="ga">A</span>: <b id="brAv"></b></label>
+      <input type="range" id="brA" min="0.15" max="0.7" step="0.01" value="0.5">
+      <label>Base rate of group <span class="gb">B</span>: <b id="brBv"></b></label>
+      <input type="range" id="brB" min="0.15" max="0.7" step="0.01" value="0.3">
+      <label><input type="checkbox" id="lock" checked> Use one shared threshold (same score → same decision)</label>
+      <label>Threshold for <span class="ga">A</span>: <b id="tAv"></b></label>
+      <input type="range" id="tA" min="0.05" max="0.95" step="0.01" value="0.5">
+      <label>Threshold for <span class="gb">B</span>: <b id="tBv"></b></label>
+      <input type="range" id="tB" min="0.05" max="0.95" step="0.01" value="0.5">
+      <button id="equalize">Find thresholds that equalize false positive rates</button>
+    </div>
+    <div class="col">
+      <table>
+        <thead><tr><th>Metric</th><th class="ga">Group A</th><th class="gb">Group B</th></tr></thead>
+        <tbody id="fairTable"></tbody>
+      </table>
+      <div class="verdict" id="fairVerdict"></div>
+    </div>
+  </div>
+  <h3>Calibration check (outcome rate by score bin)</h3>
+  <canvas id="calib" width="900" height="260"></canvas>
+  <div class="reflect">
+    <p class="todo">[YOUR WORDS] What this changed in how I think about "fair" models. In my Project 1 credit model, which fairness definition would I pick, and who pays for that choice?</p>
+  </div>
+</section>
+
+<!-- ============ PART 2: AGENCY ============ -->
+<section class="card" id="agency">
+  <span class="tag">Part II · Agency</span>
+  <h2>2. The boat that spins in circles: reward hacking and shaping</h2>
+  <p>Christian describes OpenAI's boat-racing agent that discovered it could score more points by circling forever over respawning bonus targets than by finishing the race. It did exactly what the reward said, not what the designers meant. The fix the book discusses comes from Andrew Ng and Stuart Russell: <strong>potential-based shaping</strong>, i.e. reward <em>progress</em> as a difference of potentials, <code>F = γ·Φ(s') − Φ(s)</code>. Over any loop the bonuses cancel out, so the agent can't farm them and the optimal policy is unchanged.</p>
+  <p>The agent (●) solves the grid with value iteration and then follows its optimal policy. The goal (★) is worth +10 and ends the episode. The bonus tile (◆) pays +1 every time you enter it, like the respawning targets.</p>
+  <div class="row">
+    <div class="col">
+      <label>Reward design</label>
+      <select id="rewardMode" style="font:inherit;padding:6px;border-radius:8px;width:100%">
+        <option value="sparse">Goal only (sparse reward)</option>
+        <option value="naive" selected>Goal + respawning bonus tile (naive "helpful" shaping)</option>
+        <option value="potential">Goal + potential-based shaping (Ng, Harada &amp; Russell 1999)</option>
+      </select>
+      <label>Discount γ (how much the agent cares about the future): <b id="gv"></b></label>
+      <input type="range" id="gamma" min="0.80" max="0.99" step="0.01" value="0.95">
+      <button class="primary" id="runAgent">Run agent</button>
+      <div class="verdict" id="agentVerdict"></div>
+    </div>
+    <div class="col">
+      <div class="grid" id="rlGrid"></div>
+    </div>
+  </div>
+  <div class="reflect">
+    <p class="todo">[YOUR WORDS] A time I have seen "the metric becomes the target" in real life (school, work, apps). How is an LLM chatbot giving credit advice (my Project 2) a reward-specification problem?</p>
+  </div>
+</section>
+
+<!-- ============ PART 3: NORMATIVITY ============ -->
+<section class="card" id="normativity">
+  <span class="tag">Part III · Normativity</span>
+  <h2>3. Learning what someone wants by watching them: inverse RL</h2>
+  <p>Instead of writing the reward down, Russell and Ng asked: can we <em>infer</em> it from what an expert does? This is inverse reinforcement learning, and it is the root of cooperative IRL and of today's learning from human feedback. The catch the book keeps returning to: behavior underdetermines values. If the expert never had a reason to avoid the mud, the learner can't tell whether they mind it.</p>
+  <p>Click cells to draw a path from S to G (each click must be next to the previous one). Add one or more demonstrations, then run <strong>Maximum-Entropy IRL</strong> (Ziebart et al. 2008) to infer how much the "expert" likes each terrain.</p>
+  <div class="legend">
+    <span><i class="sw" style="background:var(--road)"></i>road</span>
+    <span><i class="sw" style="background:var(--grass)"></i>grass</span>
+    <span><i class="sw" style="background:var(--mud)"></i>mud</span>
+  </div>
+  <div class="row">
+    <div class="col">
+      <div class="grid" id="irlGrid"></div>
+    </div>
+    <div class="col">
+      <button id="presetCareful">Preset: expert who avoids mud</button>
+      <button id="presetLazy">Preset: expert who walks through mud</button>
+      <br>
+      <button id="clearPath">Clear current path</button>
+      <button id="addDemo">Add path as demo</button>
+      <button id="clearDemos">Clear all demos</button>
+      <button class="primary" id="runIRL">Infer reward</button>
+      <p class="sub" id="demoCount">0 demos</p>
+      <h3>Inferred reward per step on each terrain</h3>
+      <div class="bars" id="irlBars"></div>
+      <div class="verdict" id="irlVerdict">Draw or load a demonstration, then infer.</div>
+    </div>
+  </div>
+  <div class="reflect">
+    <p class="todo">[YOUR WORDS] What surprised me when the learner misread the expert. Where does this show up when we fine-tune LLMs on human preferences?</p>
+  </div>
+</section>
+
+<section class="card" id="closing">
+  <span class="tag">Closing</span>
+  <h2>What I am taking with me</h2>
+  <div class="reflect">
+    <p class="todo">[YOUR WORDS] What came up in our three book club discussions. Where I agree or disagree with Christian. How the book connects to explainability: is explaining a model enough if the objective itself is wrong?</p>
+  </div>
+</section>
+
+<footer>Code: plain HTML and JavaScript, no libraries. All data is simulated with a fixed seed. Book: Brian Christian, <em>The Alignment Problem: Machine Learning and Human Values</em>, W. W. Norton, 2020.</footer>
+</main>
+
+<script>
+/* ---------- helpers ---------- */
+function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const pct = x => (100*x).toFixed(1)+'%';
+const $ = id => document.getElementById(id);
+
+/* =========================================================
+   PART 1: calibration vs. error-rate balance
+   Scores ~ Beta(k*m, k*(1-m)) with mean m = base rate,
+   outcome ~ Bernoulli(score)  ->  perfectly calibrated.
+   ========================================================= */
+function gammaSample(k, rnd){ // Marsaglia-Tsang, k>0
+  if(k<1){ return gammaSample(k+1,rnd)*Math.pow(rnd(),1/k); }
+  const d=k-1/3, c=1/Math.sqrt(9*d);
+  while(true){
+    let x,v; do{ const u1=rnd(),u2=rnd(); x=Math.sqrt(-2*Math.log(u1))*Math.cos(2*Math.PI*u2); v=1+c*x; }while(v<=0);
+    v=v*v*v; const u=rnd();
+    if(Math.log(u)<0.5*x*x+d-d*v+d*Math.log(v)) return d*v;
+  }
+}
+function makeGroup(m, seed, n=6000, k=4){
+  const rnd=mulberry32(seed), s=[], y=[];
+  for(let i=0;i<n;i++){
+    const g1=gammaSample(k*m,rnd), g2=gammaSample(k*(1-m),rnd);
+    const sc=g1/(g1+g2); s.push(sc); y.push(rnd()<sc?1:0);
+  }
+  return {s,y};
+}
+function rates(G,t){
+  let tp=0,fp=0,tn=0,fn=0;
+  for(let i=0;i<G.s.length;i++){
+    const p=G.s[i]>=t;
+    if(p&&G.y[i]) tp++; else if(p) fp++; else if(G.y[i]) fn++; else tn++;
+  }
+  return {fpr:fp/(fp+tn||1), fnr:fn/(fn+tp||1), ppv:tp/(tp+fp||1), flag:(tp+fp)/G.s.length, base:(tp+fn)/G.s.length};
+}
+let GA,GB;
+function regen(){ GA=makeGroup(+$('brA').value,11); GB=makeGroup(+$('brB').value,22); }
+function drawCalib(){
+  const c=$('calib'), x=c.getContext('2d'), W=c.width,H=c.height, pad=36;
+  x.clearRect(0,0,W,H);
+  x.strokeStyle=css('--line'); x.fillStyle=css('--muted'); x.font='13px system-ui';
+  x.beginPath(); x.moveTo(pad,H-pad); x.lineTo(W-10,H-pad); x.moveTo(pad,H-pad); x.lineTo(pad,10); x.stroke();
+  x.setLineDash([4,4]); x.beginPath(); x.moveTo(pad,H-pad); x.lineTo(W-10,10); x.stroke(); x.setLineDash([]);
+  x.fillText('risk score →',W-100,H-10); x.fillText('outcome rate',pad+4,20);
+  const bins=10;
+  [[GA,'--a',-6],[GB,'--b',6]].forEach(([G,col,off])=>{
+    const cnt=new Array(bins).fill(0), pos=new Array(bins).fill(0);
+    G.s.forEach((s,i)=>{const b=Math.min(bins-1,Math.floor(s*bins)); cnt[b]++; pos[b]+=G.y[i];});
+    x.fillStyle=css(col);
+    for(let b=0;b<bins;b++){ if(cnt[b]<30) continue;
+      const px=pad+((b+.5)/bins)*(W-10-pad)+off, py=(H-pad)-(pos[b]/cnt[b])*(H-pad-10);
+      x.beginPath(); x.arc(px,py,5,0,7); x.fill(); }
+  });
+  // thresholds
+  [[+$('tA').value,'--a'],[+$('tB').value,'--b']].forEach(([t,col])=>{
+    x.strokeStyle=css(col); const px=pad+t*(W-10-pad); x.beginPath(); x.moveTo(px,H-pad); x.lineTo(px,10); x.stroke();
+  });
+}
+function updateFair(){
+  $('brAv').textContent=(+$('brA').value).toFixed(2); $('brBv').textContent=(+$('brB').value).toFixed(2);
+  if($('lock').checked) $('tB').value=$('tA').value;
+  const tA=+$('tA').value, tB=+$('tB').value;
+  $('tAv').textContent=tA.toFixed(2); $('tBv').textContent=tB.toFixed(2);
+  const a=rates(GA,tA), b=rates(GB,tB);
+  const rows=[['Actual base rate',a.base,b.base],['Flagged high-risk',a.flag,b.flag],
+    ['False positive rate (flagged, but no outcome)',a.fpr,b.fpr],['False negative rate (missed)',a.fnr,b.fnr],
+    ['Precision (flagged who had outcome)',a.ppv,b.ppv]];
+  $('fairTable').innerHTML=rows.map(r=>`<tr><td>${r[0]}</td><td>${pct(r[1])}</td><td>${pct(r[2])}</td></tr>`).join('');
+  const same=Math.abs(tA-tB)<1e-9, fprGap=Math.abs(a.fpr-b.fpr), fnrGap=Math.abs(a.fnr-b.fnr);
+  let v;
+  if(same) v=`Same score → same decision, and the score is calibrated (dots sit on the diagonal for both groups). But the false positive rate differs by <b>${(100*fprGap).toFixed(1)} points</b> and the false negative rate by <b>${(100*fnrGap).toFixed(1)} points</b>. This is the ProPublica-vs-Northpointe standoff.`;
+  else v=`Now the groups face different thresholds, so the <b>same score</b> leads to <b>different decisions</b> depending on group. FPR gap: ${(100*fprGap).toFixed(1)} pts, FNR gap: ${(100*fnrGap).toFixed(1)} pts, precision gap: ${(100*Math.abs(a.ppv-b.ppv)).toFixed(1)} pts. Fixing one fairness metric broke another.`;
+  if(Math.abs(+$('brA').value-+$('brB').value)<0.015) v+=' (With equal base rates the conflict disappears. That is exactly the condition in the impossibility theorem.)';
+  $('fairVerdict').innerHTML=v; drawCalib();
+}
+$('equalize').onclick=()=>{
+  $('lock').checked=false; const tA=+$('tA').value, target=rates(GA,tA).fpr;
+  let best=0.5,bd=9; for(let t=0.05;t<=0.95;t+=0.005){const d=Math.abs(rates(GB,t).fpr-target); if(d<bd){bd=d;best=t;}}
+  $('tB').value=best.toFixed(2); updateFair();
+};
+['brA','brB'].forEach(id=>$(id).oninput=()=>{regen();updateFair();});
+['tA','tB','lock'].forEach(id=>$(id).oninput=()=>{ if(id==='tB') $('lock').checked=false; updateFair();});
+regen(); updateFair();
+
+/* =========================================================
+   PART 2: reward hacking vs. potential-based shaping
+   ========================================================= */
+const RW=7, RH=5, START=[0,4], GOAL=[6,0], BONUS=[2,2];
+const WALLS=new Set(['3,1','3,2','3,3','1,1','5,3']);
+const ACTS=[[0,-1],[1,0],[0,1],[-1,0]];
+const key=(x,y)=>x+','+y;
+function step(x,y,a){const nx=x+ACTS[a][0], ny=y+ACTS[a][1];
+  if(nx<0||ny<0||nx>=RW||ny>=RH||WALLS.has(key(nx,ny))) return [x,y]; return [nx,ny];}
+const phi=(x,y)=>-(Math.abs(x-GOAL[0])+Math.abs(y-GOAL[1])); // potential = -manhattan distance to goal
+function reward(x,y,nx,ny,mode,g){
+  let r=-0.1; // small step cost
+  if(nx===GOAL[0]&&ny===GOAL[1]) r+=10;
+  if(mode==='naive' && nx===BONUS[0]&&ny===BONUS[1]) r+=1;
+  if(mode==='potential'){ const pn=(nx===GOAL[0]&&ny===GOAL[1])?0:phi(nx,ny); r+=g*pn-phi(x,y); }
+  return r;
+}
+function solve(mode,g){
+  const V={}; for(let x=0;x<RW;x++)for(let y=0;y<RH;y++)V[key(x,y)]=0;
+  for(let it=0;it<500;it++){
+    for(let x=0;x<RW;x++)for(let y=0;y<RH;y++){
+      if(WALLS.has(key(x,y))||(x===GOAL[0]&&y===GOAL[1])) continue;
+      let best=-1e9; for(let a=0;a<4;a++){const [nx,ny]=step(x,y,a);
+        const term=(nx===GOAL[0]&&ny===GOAL[1]); const q=reward(x,y,nx,ny,mode,g)+(term?0:g*V[key(nx,ny)]); if(q>best)best=q;}
+      V[key(x,y)]=best;
+    }
+  }
+  return V;
+}
+function greedy(x,y,V,mode,g){let best=-1e9,ba=0; for(let a=0;a<4;a++){const [nx,ny]=step(x,y,a);
+  const term=(nx===GOAL[0]&&ny===GOAL[1]); const q=reward(x,y,nx,ny,mode,g)+(term?0:g*V[key(nx,ny)]); if(q>best+1e-9){best=q;ba=a;}} return ba;}
+function drawRL(agent, visits){
+  const el=$('rlGrid'); el.style.gridTemplateColumns=`repeat(${RW},1fr)`; el.style.width='min(100%,420px)'; el.innerHTML='';
+  for(let y=0;y<RH;y++)for(let x=0;x<RW;x++){
+    const d=document.createElement('div'); d.className='cell';
+    const k=key(x,y);
+    d.style.background=WALLS.has(k)?css('--wall'):css('--road');
+    if(visits&&visits[k]&&!WALLS.has(k)){ d.style.boxShadow=`inset 0 0 0 ${Math.min(6,1+visits[k])}px ${css('--accent')}`; }
+    if(x===GOAL[0]&&y===GOAL[1]) d.textContent='★';
+    if(x===BONUS[0]&&y===BONUS[1]&&$('rewardMode').value==='naive') d.textContent='◆';
+    if(x===START[0]&&y===START[1]&&!d.textContent) d.textContent='S';
+    if(agent&&agent[0]===x&&agent[1]===y){ d.textContent='●'; d.style.color=css('--accent'); d.style.fontSize='1.3rem'; }
+    el.appendChild(d);
+  }
+}
+let anim=null;
+function runAgent(){
+  if(anim) clearInterval(anim);
+  const mode=$('rewardMode').value, g=+$('gamma').value; $('gv').textContent=g.toFixed(2);
+  const V=solve(mode,g); let [x,y]=START, t=0, ret=0, goalR=0, visits={}; const MAX=40;
+  visits[key(x,y)]=1; drawRL([x,y],visits); $('agentVerdict').textContent='Running…';
+  anim=setInterval(()=>{
+    const a=greedy(x,y,V,mode,g), [nx,ny]=step(x,y,a);
+    ret+=reward(x,y,nx,ny,mode,g); x=nx;y=ny;t++; visits[key(x,y)]=(visits[key(x,y)]||0)+1;
+    drawRL([x,y],visits);
+    const done=(x===GOAL[0]&&y===GOAL[1]);
+    if(done||t>=MAX){ clearInterval(anim); anim=null;
+      let msg;
+      if(done) msg=`<b style="color:var(--good)">Reached the goal in ${t} steps.</b> `+(mode==='potential'?'Shaping sped up learning signals without changing what is optimal: in the discounted return the shaping bonuses telescope and cancel out, so there is nothing to farm.':mode==='sparse'?'With only the true reward, the agent does what we meant (it just gets little feedback along the way, which is what makes sparse rewards hard to learn from).':'At this discount the bonus was not worth farming. Try a higher γ.');
+      else msg=`<b style="color:var(--bad)">Never finished: ${MAX} steps, stuck circling.</b> The agent collected the bonus over and over (darker outline = more visits). It is maximizing the reward we wrote, not the goal we meant. This is reward hacking.`;
+      $('agentVerdict').innerHTML=msg+` <span class="sub">Return collected: ${ret.toFixed(2)}.</span>`;
+    }
+  },160);
+}
+$('runAgent').onclick=runAgent;
+$('rewardMode').onchange=()=>{drawRL(START);$('agentVerdict').textContent='';};
+$('gamma').oninput=()=>$('gv').textContent=(+$('gamma').value).toFixed(2);
+$('gv').textContent=(+$('gamma').value).toFixed(2); drawRL(START);
+
+/* =========================================================
+   PART 3: Maximum-Entropy IRL on a small terrain grid
+   ========================================================= */
+const IW=8, IH=6, IS=[0,5], IG=[7,0];
+const TER=['road','grass','mud'];
+// terrain layout (rows top->bottom)
+const MAP=[
+ 'GGGGGRRR',
+ 'GGMMMRGG',
+ 'RRMMMRGG',
+ 'RGMMMRGG',
+ 'RGGGGRGG',
+ 'RRRRRRGG'];
+const terr=(x,y)=>({R:0,G:1,M:2})[MAP[y][x]];
+let path=[], demos=[];
+const cellIdx=(x,y)=>y*IW+x;
+function drawIRL(rewardMap){
+  const el=$('irlGrid'); el.style.gridTemplateColumns=`repeat(${IW},1fr)`; el.style.width='min(100%,440px)'; el.innerHTML='';
+  const demoVisits={}; demos.forEach(d=>d.forEach(([x,y])=>demoVisits[key(x,y)]=(demoVisits[key(x,y)]||0)+1));
+  for(let y=0;y<IH;y++)for(let x=0;x<IW;x++){
+    const d=document.createElement('div'); d.className='cell';
+    d.style.background=css(['--road','--grass','--mud'][terr(x,y)]);
+    if(demoVisits[key(x,y)]) d.style.boxShadow=`inset 0 0 0 3px ${css('--b')}`;
+    const pi=path.findIndex(p=>p[0]===x&&p[1]===y);
+    if(pi>=0){ d.style.boxShadow=`inset 0 0 0 3px ${css('--accent')}`; d.textContent=pi; d.style.color=css('--ink'); }
+    if(x===IS[0]&&y===IS[1]) d.textContent='S';
+    if(x===IG[0]&&y===IG[1]) d.textContent='G';
+    d.onclick=()=>clickCell(x,y);
+    el.appendChild(d);
+  }
+  $('demoCount').textContent=`${demos.length} demo${demos.length===1?'':'s'} · current path: ${path.length} cells`;
+}
+function clickCell(x,y){
+  if(path.length===0){ path=[IS.slice()]; }
+  const [lx,ly]=path[path.length-1];
+  if(lx===IG[0]&&ly===IG[1]) return;
+  if(Math.abs(lx-x)+Math.abs(ly-y)!==1) return;
+  path.push([x,y]); drawIRL();
+}
+$('clearPath').onclick=()=>{path=[];drawIRL();};
+$('clearDemos').onclick=()=>{demos=[];path=[];$('irlBars').innerHTML='';$('irlVerdict').textContent='Draw or load a demonstration, then infer.';drawIRL();};
+$('addDemo').onclick=()=>{
+  const last=path[path.length-1];
+  if(!last||last[0]!==IG[0]||last[1]!==IG[1]){ $('irlVerdict').textContent='The path has to end at G.'; return; }
+  demos.push(path); path=[]; drawIRL();
+};
+function pathFrom(moves){ let [x,y]=IS, p=[[x,y]]; for(const c of moves){ if(c==='U')y--; if(c==='D')y++; if(c==='L')x--; if(c==='R')x++; p.push([x,y]); } return p; }
+// Expert A: two different shortest routes, both avoid the mud even though equally short routes cross it
+$('presetCareful').onclick=()=>{ demos=[pathFrom('RRRRRUUUUURR'), pathFrom('UUUUURRRRRRR')]; path=[]; drawIRL(); runIRL(); };
+// Expert B: a shortest route straight through the mud
+$('presetLazy').onclick=()=>{ demos=[pathFrom('UUURRRRRUURR')]; path=[]; drawIRL(); runIRL(); };
+
+function lse(a){ const m=Math.max(...a); if(m<-1e8) return -1e9; return m+Math.log(a.reduce((s,v)=>s+Math.exp(v-m),0)); }
+function runIRL(){
+  if(demos.length===0){ $('irlVerdict').textContent='Add at least one demo first.'; return; }
+  const N=IW*IH, T=24, gIdx=cellIdx(IG[0],IG[1]);
+  const nbr=[]; for(let y=0;y<IH;y++)for(let x=0;x<IW;x++){ const l=[];
+    for(const [dx,dy] of ACTS){const nx=x+dx,ny=y+dy; if(nx>=0&&ny>=0&&nx<IW&&ny<IH) l.push(cellIdx(nx,ny));} nbr.push(l); }
+  const F=[]; for(let y=0;y<IH;y++)for(let x=0;x<IW;x++){const f=[0,0,0]; f[terr(x,y)]=1; F.push(f);}
+  // empirical feature counts (states visited before reaching goal)
+  const fD=[0,0,0]; demos.forEach(d=>d.slice(0,-1).forEach(([x,y])=>{const f=F[cellIdx(x,y)]; for(let k=0;k<3;k++)fD[k]+=f[k]/demos.length;}));
+  let w=[-1,-1,-1]; const lr=0.05;
+  for(let it=0;it<400;it++){
+    const r=F.map(f=>w[0]*f[0]+w[1]*f[1]+w[2]*f[2]);
+    // backward soft value iteration with horizon T; must reach the goal
+    const V=[]; V[T]=new Array(N).fill(-1e9); V[T][gIdx]=0;
+    const P=[];
+    for(let t=T-1;t>=0;t--){ V[t]=new Array(N).fill(-1e9); P[t]=[];
+      for(let s=0;s<N;s++){ if(s===gIdx){V[t][s]=0; P[t][s]=null; continue;}
+        const q=nbr[s].map(n=>r[s]+V[t+1][n]); const v=lse(q); V[t][s]=v; P[t][s]=q.map(qq=>v<-1e8?0:Math.exp(qq-v)); } }
+    // forward pass: expected state visitation
+    let D=new Array(N).fill(0); D[cellIdx(IS[0],IS[1])]=1; const fE=[0,0,0];
+    for(let t=0;t<T;t++){ const D2=new Array(N).fill(0);
+      for(let s=0;s<N;s++){ if(D[s]===0||s===gIdx) continue; for(let k=0;k<3;k++) fE[k]+=D[s]*F[s][k];
+        nbr[s].forEach((n,j)=>D2[n]+=D[s]*P[t][s][j]); }
+      D=D2; }
+    for(let k=0;k<3;k++) w[k]+=lr*(fD[k]-fE[k]);
+  }
+  // display: weights relative to road (only differences between terrains are identifiable)
+  const maxAbs=Math.max(...w.map(Math.abs),1e-6);
+  $('irlBars').innerHTML=TER.map((n,k)=>{const v=w[k], frac=Math.abs(v)/maxAbs*50;
+    return `<div class="bar"><span style="width:52px">${n}</span><div class="track"><div class="zero"></div><div class="fill" style="${v<0?`right:50%`:`left:50%`};width:${frac}%;background:${v<0?css('--bad'):css('--good')}"></div></div><span style="width:52px;text-align:right">${v.toFixed(2)}</span></div>`;}).join('');
+  const used=fD.map(v=>v>0.001);
+  let msg;
+  if(!used[2]) msg=`The demos never stepped on mud, but the shortest route never needed to cross it, so <b>the learner is unsure about mud</b>. Its mud weight mostly reflects the prior, not evidence about the expert. Behavior underdetermines values.`;
+  else msg=`The demos cross mud, so the learner concludes the expert does not mind it much.`;
+  if(w[2]<w[0]-0.5 && w[2]<w[1]-0.5) msg=`The learner inferred <b>mud is costly</b>: the expert passed up equally short routes through it. Detours are what make preferences visible.`;
+  $('irlVerdict').innerHTML=msg;
+}
+$('runIRL').onclick=runIRL;
+drawIRL();
+</script>
+</body>
+</html>
